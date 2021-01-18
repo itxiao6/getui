@@ -1,0 +1,28 @@
+{
+  "name": "itxiao6/getui",
+  "description": "UniAPP个推SDK",
+  "keywords": [
+    "Uniapp",
+    "Getui",
+    "php",
+    "pushapi"
+  ],
+  "homepage": "https://github.com/itxiao6/getui",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "itxiao6@qq.com",
+      "homepage": "https://github.com/itxiao6/getui"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Getui\\": "src/"
+    }
+  },
+  "require": {
+    "guzzlehttp/guzzle": "^7.2",
+    "ext-json": "*",
+    "doctrine/cache": "^1.10"
+  }
+}
