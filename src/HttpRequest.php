@@ -44,6 +44,10 @@ class HttpRequest
      * @var string
      */
     protected $api;
+    /**
+     * @var Authorization
+     */
+    protected $authorization;
 
     /**
      * HttpRequest constructor.
@@ -78,10 +82,11 @@ class HttpRequest
      * 设置Token
      * @param Authorization $authorization
      * @return $this
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function withToken(Authorization $authorization)
     {
-        $this->headers['token'] = $authorization->getTokenAsString();
+        $this->authorization = $authorization;
         return $this;
     }
 
@@ -113,19 +118,23 @@ class HttpRequest
      */
     public function send()
     {
-        $this->data['appkey'] = $this->config->getAppKey();
-        $this->data['timestamp'] = $this->micro_time();
-        $this->data['sign'] = hash("sha256", "{$this->config->getAppKey()}{$this->data['timestamp']}{$this->config->getMasterSecret()}");
-//        var_dump($this->data);exit();
-//        var_dump($this->method, $this->gateway . $this->config->getAppId() . $this->api);
-//        var_dump([
-//            'headers' => $this->headers,
-//            'body' => json_encode($this->data)
-//        ]);
-        return json_decode($this->client->request($this->method, $this->gateway . $this->config->getAppId() . $this->api, [
-            'headers' => $this->headers,
-            'body' => json_encode($this->data)
-        ])->getBody()->getContents(), 1);
+        try{
+            $this->data['appkey'] = $this->config->getAppKey();
+            $this->data['timestamp'] = $this->micro_time();
+            $this->data['sign'] = hash("sha256", "{$this->config->getAppKey()}{$this->data['timestamp']}{$this->config->getMasterSecret()}");
+            $this->headers['token'] = $this->authorization->getTokenAsString();
+            return json_decode($this->client->request($this->method, $this->gateway . $this->config->getAppId() . $this->api, [
+                'headers' => $this->headers,
+                'body' => json_encode($this->data)
+            ])->getBody()->getContents(), 1);
+        }catch (\GuzzleHttp\Exception\ClientException $exception){
+            $data = json_encode($exception->getResponse()->getBody()->getContents(),1);
+            if($exception->getResponse()->getStatusCode() == 400 && $data['code'] == 20001){
+                $this->authorization->refurbishToken();
+                $this->send();
+            }
+            throw $exception;
+        }
     }
 
     private function micro_time()
