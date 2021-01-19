@@ -122,7 +122,9 @@ class HttpRequest
             $this->data['appkey'] = $this->config->getAppKey();
             $this->data['timestamp'] = $this->micro_time();
             $this->data['sign'] = hash("sha256", "{$this->config->getAppKey()}{$this->data['timestamp']}{$this->config->getMasterSecret()}");
-            $this->headers['token'] = $this->authorization->getTokenAsString();
+            if($this->authorization instanceof Authorization && method_exists($this->authorization,'getTokenAsString')){
+                $this->headers['token'] = $this->authorization->getTokenAsString();
+            }
             return json_decode($this->client->request($this->method, $this->gateway . $this->config->getAppId() . $this->api, [
                 'headers' => $this->headers,
                 'body' => json_encode($this->data)
