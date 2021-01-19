@@ -17,7 +17,9 @@ class NotificationMessage implements MessageInterface
         $data['payload'] = json_encode($data['payload']);
         return ['notification'=>$data];
     }
-    protected $data = [];
+    protected $data = [
+        'click_type'=>'payload'
+    ];
     public function setTitle(string $title)
     {
         $this->data['payload']['title'] = $title;
