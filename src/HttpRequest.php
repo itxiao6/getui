@@ -116,6 +116,12 @@ class HttpRequest
         $this->data['appkey'] = $this->config->getAppKey();
         $this->data['timestamp'] = $this->micro_time();
         $this->data['sign'] = hash("sha256", "{$this->config->getAppKey()}{$this->data['timestamp']}{$this->config->getMasterSecret()}");
+//        var_dump($this->data);exit();
+//        var_dump($this->method, $this->gateway . $this->config->getAppId() . $this->api);
+//        var_dump([
+//            'headers' => $this->headers,
+//            'body' => json_encode($this->data)
+//        ]);
         return json_decode($this->client->request($this->method, $this->gateway . $this->config->getAppId() . $this->api, [
             'headers' => $this->headers,
             'body' => json_encode($this->data)

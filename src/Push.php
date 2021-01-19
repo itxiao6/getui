@@ -3,53 +3,25 @@
 
 namespace Getui;
 
+use Getui\Message\MessageInterface;
+use Getui\Message\NotificationMessage;
+
 /**
  * Class Push
  * @package Getui
  */
 class Push
 {
-    /**
-     * @var HttpRequest
-     */
-    protected $request;
-    /**
-     * @var Config
-     */
-    protected $config;
-    /**
-     * @var Authorization
-     */
-    protected $auth;
+    use ApiTrait;
 
     /**
-     * 设置配置
-     * @param Config $config
-     * @return $this
-     */
-    public function withConfig(Config $config):self
-    {
-        $this->config = $config;
-        return $this;
-    }
-
-    /**
-     * @param Authorization $authorization
-     * @return $this
-     */
-    public function withAuth(Authorization $authorization):self
-    {
-        $this->auth = $authorization;
-        return $this;
-    }
-
-    /**
-     * 单推
+     * 单推 Client ID
      * @param array $cid
-     * @param $message
+     * @param NotificationMessage $message
+     * @return array
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function toSingle(array $cid,$message)
+    public function toSingleCid(array $cid, NotificationMessage $message)
     {
         $data = (new HttpRequest())->
         withApi('/push/single/cid')->
@@ -57,16 +29,69 @@ class Push
         withConfig($this->config)->
         withToken($this->auth)->
         withData([
-            'request_id'=>rand(11111100000,9999999900009),
-            'settings'=>[
-                'ttl'=>3600000
+            'request_id' => rand(11111100000, 9999999900009),
+            'settings' => [
+                'ttl' => 3600000
             ],
-            'audience'=>[
-                'cid'=>$cid
+            'audience' => [
+                'cid' => $cid
             ],
-            'push_message'=>$message
+            'push_message' => $message->toArray()
         ])->
         send();
-        var_dump($data);
+        if (!(isset($data['msg']) && $data['msg'] === 'success' && isset($data['code']) &&$data['code'] === 0)) {
+            throw new \Exception(isset($data['msg'])?$data['msg']:'接口错误');
+        }
+        return $data;
     }
+
+    /**
+     * 推送消息到所有用户
+     * @param NotificationMessage $message
+     * @return array
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function toAll(NotificationMessage $message)
+    {
+        return (new HttpRequest())->
+        withApi('/push/all')->
+        withMethod('POST')->
+        withConfig($this->config)->
+        withToken($this->auth)->
+        withData([
+            'request_id' => rand(11111100000, 9999999900009),
+//            'group_name'=>'',
+            'settings' => [
+                'ttl' => 3600000
+            ],
+            'audience' => 'all',
+            'push_message' => $message->toArray()
+        ])->
+        send();
+    }
+
+    /**
+     * 单推 Alias
+     * @param array $alias
+     * @param NotificationMessage $message
+     * @return array
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function toSingleAlias(array $alias, NotificationMessage $message)
+    {
+        return (new HttpRequest())->
+        withApi('/push/single/alias')->
+        withMethod('POST')->
+        withConfig($this->config)->
+        withToken($this->auth)->
+        withData([
+            'audience'=>[
+                'alias' => $alias
+            ],
+            'request_id' => rand(11111100000, 9999999900009),
+            'push_message' => $message->toArray()
+        ])->
+        send();
+    }
+
 }
