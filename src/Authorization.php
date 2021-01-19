@@ -43,7 +43,7 @@ class Authorization
      */
     public function getTokenAsString(): string
     {
-        $key = 'cache:getui:token';
+        $key = 'cache:getui:token:'.$this->config->getAppId();
         if($this->cache instanceof Cache && $this->cache->contains($key)){
             return $this->cache->fetch($key);
         }
@@ -67,7 +67,7 @@ class Authorization
      */
     public function refurbishToken()
     {
-        $key = 'cache:getui:token';
+        $key = 'cache:getui:token'.$this->config->getAppId();
         $res = (new HttpRequest())->withConfig($this->config)->withData([
         ])->withApi('/auth')->withMethod('POST')->send();
         if(isset($res['code']) && $res['code'] === 0){
